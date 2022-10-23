@@ -1,0 +1,411 @@
+<!DOCTYPE HTML>
+<!--
+	Story by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>CS194-26 Project 4</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper" class="divided">
+
+				<!-- (Auto)stitching Mosaics  -->
+					<section class="banner style1 orient-left content-align-left image-position-right fullscreen onload-image-fade-in onload-content-fade-right color6">
+						<div class="content">
+							<h1>(Auto)stitching Mosaics</h1>
+
+							<p class="major">Varun Neal Srivastava</p>
+						</div>
+
+					</section>
+
+				<!-- Part A: Image Warping and Mosaics -->
+				<section class="spotlight style1 orient-center content-align-center image-position-center onscroll-image-fade-in color1 invert" id="first">
+						<div class="content">
+							<h2>Part A: Image Warping and Mosaics</h2>
+						</div>
+						<div class="image">
+							<img src="out/skull_cropped.jpeg" alt="" />
+						</div>
+
+					</section>
+
+
+				<!-- Defining Correspondences -->
+				<section class="spotlight style5 orient-center content-align-center image-position-center onscroll-image-fade-in invert" id="first">
+						<div class="content">
+							<h2>Defining Correspondences</h2>
+							<p> Correspondences were manually selected. In order to help this process, I built
+								a fine-tuning tool that would automatically "snap" a correspondence to a nearby
+								pixel with a higher NCC. This resulted in fast and accurate correspondence-selection.
+						</div>
+						<div class="image">
+							<img src="out/correspondences.jpeg" alt="" />
+						</div>
+
+					</section>
+
+
+
+				<!-- Rectification -->
+					<section class="wrapper style1 color1 invert ">
+						<div class="inner">
+							<h2>Rectification</h2>
+							<p>Finding the keypoint correspondences between two planar surfaces allows us to compute
+								the homography matrix H that transforms one planar surface to the other.
+							<br> One application of this is to "rectify"—front align—a given image. Below is such
+							an example on my pencil box.</p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style1 large">
+								<article>
+									<a href="lib/pencil_box.jpeg" class="image">
+										<img src="lib/pencil_box.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Original image of my pencil box. </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/pencil_box.jpeg" class="image">
+										<img src="out/pencil_box.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Rectified with top of pencil box facing camera. </h3>
+									</div>
+								</article>
+
+
+							</div>
+
+
+						<div class="inner">
+							<p>This works quite well. It is worth noting an interpolation is needed
+								in order to complete the warp.
+								<br> Below is another example of rectification on Holbein's 1533 Painting
+								<em>The Ambassadors</em>. Particularly, we are rectifying the skull
+								present in the bottom left of the image.</p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style1 medium">
+								<article>
+									<a href="lib/ambassadors.jpeg" class="image">
+										<img src="lib/ambassadors.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3><em>The Ambassadors</em> </h3>
+									</div>
+								</article>
+								<article>
+									<a href="lib/skull_box.jpeg" class="image">
+										<img src="lib/skull_box.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Cropped to skull, with bounding box for reference. </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/skull_cropped.jpeg" class="image">
+										<img src="out/skull_cropped.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Cropped rectification of the skull.</h3>
+									</div>
+								</article>
+
+
+							</div>
+
+						<div class="inner">
+							<p>We are having a lot of fun rectifying! I am going to use this technique to make
+								a meme. </p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style1 medium">
+								<article>
+									<a href="lib/walter_white.jpeg" class="image">
+										<img src="lib/walter_white.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Walt Jr. Showing his father his computer.</h3>
+									</div>
+								</article>
+								<article>
+									<a href="lib/finger.jpeg" class="image">
+										<img src="lib/finger.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>KID NAMED FINGER meme. </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/walt_jr.jpeg" class="image">
+										<img src="out/walt_jr.jpeg" alt="" />
+									</a>
+								</article>
+
+
+							</div>
+						<br><br>
+
+					</section>
+
+				<!-- Mosaics -->
+					<section class="wrapper style1 color6">
+						<div class="inner">
+							<h2>Mosaics</h2>
+							<p>We have the tools to stitch together mosaics! <br> We will use
+							a distance transform as our mask — this will allow us to determine
+							the boundaries for our images, and the behavior of the mosaic on the regions
+								where two images overlap. </p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style2 medium">
+								<article>
+									<a href="lib/varun_left.jpeg" class="image">
+										<img src="lib/varun_left.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Left </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/distance0.jpeg" class="image">
+										<img src="out/distance0.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Distance transform of Left</h3>
+									</div>
+								</article>
+								<article>
+									<a href="lib/varun_left.jpeg" class="image">
+										<img src="lib/varun_left.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Right </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/distance1.jpeg" class="image">
+										<img src="out/distance1.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Distance transform of Right </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/distance_mask.jpeg" class="image">
+										<img src="out/distance_mask.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Binary mask </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/varun_stitched_distance_mask.jpeg" class="image">
+										<img src="out/varun_stitched_distance_mask.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Final image </h3>
+									</div>
+								</article>
+
+							</div>
+
+
+						<div class="inner">
+							<p>Oh no! The lighting is all fucked up. Instead of using a binary mask,
+								let's apply a Gaussian Blur to the mask to smooth over transitions.</p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style1 medium">
+								<article>
+									<a href="out/blur_distance_mask.jpeg" class="image">
+										<img src="out/blur_distance_mask.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3><em>Blurred mask</em> </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/varun_stitched_distance_mask_blur.jpeg" class="image">
+										<img src="out/varun_stitched_distance_mask_blur.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>New final image </h3>
+									</div>
+								</article>
+							</div>
+
+						<div class="inner">
+							<p>Much better! Let's use this technique to make more mosaics:</p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style1 small">
+								<article>
+									<a href="lib/building_bottom.jpeg" class="image">
+										<img src="lib/building_bottom.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>bottom</h3>
+									</div>
+								</article>
+								<article>
+									<a href="lib/building_middle.jpeg" class="image">
+										<img src="lib/building_middle.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>middle </h3>
+									</div>
+								</article>
+								<article>
+									<a href="lib/building_top.jpeg" class="image">
+										<img src="lib/building_top.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>top</h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/building.jpeg" class="image">
+										<img src="out/building.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>full</h3>
+									</div>
+								</article>
+
+
+							</div>
+
+						<div class="inner">
+							<p>Anthropology building:</p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style1 small">
+								<article>
+									<a href="lib/anthro1.jpeg" class="image">
+										<img src="lib/anthro1.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>left</h3>
+									</div>
+								</article>
+								<article>
+									<a href="lib/anthro2.jpeg" class="image">
+										<img src="lib/anthro2.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>middle </h3>
+									</div>
+								</article>
+								<article>
+									<a href="lib/anthro3.jpeg" class="image">
+										<img src="lib/anthro3.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>right</h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/anthropology_cropped.jpeg" class="image">
+										<img src="out/anthropology_cropped.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>full (slightly cropped)</h3>
+									</div>
+								</article>
+
+
+							</div>
+
+						<div class="inner">
+							<p>It is clear in the above example that it matters <em>which</em> perspective
+							we choose to align each image. In the above example, the first and second
+							images are greatly distorted to match the plane of the third image.
+								<br><br> In an attempt to do some fun stuff, I tried to make myself floating.
+								Unfortunately, the lighting wasn't great here, and there were not many
+								good corespondences, but the strange warping gave me the added effect of looking taller!
+							</p>
+						</div>
+
+
+						<!-- Gallery -->
+							<div class="gallery style1 small">
+								<article>
+									<a href="lib/floating_bottom.jpeg" class="image">
+										<img src="lib/floating_bottom.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>bottom</h3>
+									</div>
+								</article>
+								<article>
+									<a href="lib/floating_top.jpeg" class="image">
+										<img src="lib/floating_top.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>top </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/floating2.jpeg" class="image">
+										<img src="out/floating2.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>floating and tall? dream man</h3>
+									</div>
+								</article>
+
+
+							</div>
+
+						<br><br>
+
+					</section>
+
+
+
+				<!-- Part A Interlude -->
+					<section class="spotlight style1 orient-left content-align-left image-position-center onscroll-image-fade-in invert color1" id="first">
+						<div class="content">
+							<h2>Part A Interlude</h2>
+							<p> It has been incredibly fun to start thinking of images in terms of the projective
+								planes that they lay on. In order to implement the homography matrix,
+								I spent a lot of time playing with matrices by-hand to see how they would
+								map planes (parallelograms) to each other. </p>
+
+						</div>
+						<div class="image">
+							<img src="out/anthropology2.jpeg" alt="" />
+						</div>
+					</section>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
