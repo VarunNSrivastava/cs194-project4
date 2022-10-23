@@ -13,8 +13,9 @@ import os
 
 
 def computeH(correspondences):
-    # solves for h where
-    # A * h = b is our homography system of equations
+    """
+    solves for h where A * h = b is our homography system of equations
+    """
     num_points = correspondences.shape[1]
     A = np.zeros((2 * num_points, 8))
     b = np.zeros((2 * num_points, 1))
@@ -36,14 +37,19 @@ def computeH(correspondences):
 
 
 def NCC(v1, v2):
-    # returns NCC of 1d arrays v1 and v2.
+    """
+    returns NCC of 1d arrays v1 and v2.
+    """
     nv1 = v1 / np.linalg.norm(v1)
     nv2 = v2 / np.linalg.norm(v2)
     return np.dot(nv1, nv2)
 
 
 def lattice(guess):
-    # returns all points in a +/-5 window around guess
+    """
+    returns all points in a +/-5 window around guess
+    """
+
     return np.array([
         [int(h + guess[0]), int(w + guess[1])]
         for h in range(-5, 6)
@@ -51,7 +57,9 @@ def lattice(guess):
     ])
 
 def gkern(kernlen, std=None):
-    """Returns a 2D Gaussian kernel array."""
+    """
+    Returns a 2D Gaussian kernel array.
+    """
     if not std:
         std = 0.3 * ((kernlen - 1) * 0.5 - 1) + 0.8
     gkern1d = cv2.getGaussianKernel(kernlen, std)
@@ -74,7 +82,9 @@ def blur(img, amount, std=None):
 
 
 def normalize(img):
-    # normalizes img to [0, 1] and also removes alpha channel if present
+    """
+    normalizes img to [0, 1]
+    """
     if np.max(img) == np.min(img):
         return img
     if len(img.shape) == 2:
@@ -90,8 +100,10 @@ def normalize(img):
 
 
 def add_alpha(img):
+    """
+    adds an alpha channel to rgb img
+    """
     if img.shape[2] == 3:
-        print("addding alpha...")
         alpha = np.ones((img.shape[0], img.shape[1]))
         return np.dstack((img, alpha))
     return img
@@ -114,7 +126,9 @@ def points(im):
 
 
 def interp2(warped_r, warped_c, output_quad_r, output_quad_c, im0, im0_points):
-    """Somewhat naive interpolation function, going channel-by-channel. """
+    """
+    Naive, nearest-neighbor, interpolation function, going channel-by-channel.
+    """
     rgb = im0[im0_points[0, :], im0_points[1, :]]
 
     r = rgb[:, 0]
@@ -126,6 +140,92 @@ def interp2(warped_r, warped_c, output_quad_r, output_quad_c, im0, im0_points):
     intp_b = skinterp.griddata((warped_r, warped_c), b, (output_quad_r, output_quad_c), method="nearest")
     intp_a = np.ones_like(intp_r)
     return np.dstack((intp_r, intp_g, intp_b, intp_a))
+
+
+def warp(img, correspondence):
+    """
+    Returns the warp of the image img to match the shape of
+    the given correspondence matrix correspondence.
+    """
+    img_points = points(img)
+
+    corr_matrix = computeH(correspondence)
+    img_warped_points = np.matmul(corr_matrix, img_points)
+
+    warped_r = np.int0(img_warped_points[0, :] / img_warped_points[2, :])
+    warped_c = np.int0(img_warped_points[1, :] / img_warped_points[2, :])
+
+    shift_r = - min(np.min(warped_r), 0)
+    shift_c = - min(np.min(warped_c), 0)
+
+    warped_r += shift_r
+    warped_c += shift_c
+
+    warped_height = int(np.max(warped_r)) + 1
+    warped_width = int(np.max(warped_c)) + 1
+
+    # the shape of the warped image
+    output_quad_r, output_quad_c = polygon(warped_r[:4], warped_c[:4])
+
+    img_warped = np.zeros((warped_height, warped_width, 4), dtype=np.float32)
+
+    img_warped[output_quad_r, output_quad_c] = interp2(warped_r, warped_c, output_quad_r, output_quad_c, img,
+                                                       img_points)
+    return img_warped, shift_r, shift_c
+
+def select_correspondences(im0, im1, N=4, auto=True):
+    """
+    Tool to manually select N correspondence points between im0 and im1.
+    The "auto" boolean is a naive snapping tool to adjust a correspondence point
+    based on NCC score.
+    """
+
+    plt.ion()
+    fig, axarr = plt.subplots(1, 2, figsize=(18, 6))
+    axarr[0].imshow(im0)
+    axarr[1].imshow(im1)
+
+    correspondence = np.ones((6, N))
+
+    for j in range(N):
+        ### Select first point ###
+        x0, y0 = fig.ginput(1)[0]
+        x0, y0 = int(x0), int(y0)
+        correspondence[0, j], correspondence[1, j] = y0, x0
+        axarr[0].plot(x0, y0, '.r')
+        axarr[0].annotate(j + 1, (x0, y0), xytext=(x0 + 25, y0 + 25))
+
+        ### Select second point ###
+        x1, y1 = fig.ginput(1)[0]
+        x1, y1 = int(x1), int(y1)
+
+        if auto:
+            ### Automatically "snap" x, y to an adjusted value ###
+            region0 = lattice((y0, x0))
+            grey_region0 = rgb2gray(rgba2rgb(im0[region0[:, 0], region0[:, 1], :]))
+
+            best_corr = -1
+            best_x, best_y = x1, y1
+            for x in range(x1 - 10, x1 + 11):
+                for y in range(y1 - 10, y1 + 11):
+                    region1 = lattice((y, x))
+                    grey_region1 = rgb2gray(rgba2rgb(im1[region1[:, 0], region1[:, 1], :]))
+                    score = NCC(grey_region0.flatten(), grey_region1.flatten())
+                    # print(f"{(x, y)} \t score: {score}")
+                    if score > best_corr:
+                        best_x, best_y = x, y
+                        best_corr = score
+            if score > 0.99:
+                x1, y1 = best_x, best_y
+
+        correspondence[3, j], correspondence[4, j] = y1, x1
+        axarr[1].plot(x1, y1, '.r')
+        axarr[1].annotate(j + 1, (x1, y1), xytext=(x1 + 25, y1 + 25))
+
+    plt.ioff()
+    plt.close()
+
+    return correspondence
 
 
 class Mosaic:
@@ -143,62 +243,29 @@ class Mosaic:
         """
         assert len(images) >= 2
         self.center = len(images) // 2
-
         self.images = [add_alpha(normalize(img)) for img in images]
-
         self.correspondences = []
-
-    def __getitem__(self, index):
-        return self.images[index]
-
-    def warp(self, img, correspondence):
-        """
-        Returns the warp of the image img to match the shape of
-        the given correspondence matrix correspondence.
-
-        """
-        assert self.length() >= 2
-        im0 = self.images[0]
-        im0_points = points(im0)
-
-        corr_matrix = computeH(self.correspondences[0])
-        im0_warped_points = np.matmul(corr_matrix, im0_points)
-
-        warped_r = np.int0(im0_warped_points[0, :] / im0_warped_points[2, :])
-        warped_c = np.int0(im0_warped_points[1, :] / im0_warped_points[2, :])
-
-        shift_r = - min(np.min(warped_r), 0)
-        shift_c = - min(np.min(warped_c), 0)
-
-        warped_r += shift_r
-        warped_c += shift_c
-
-        warped_height = int(np.max(warped_r)) + 1
-        warped_width = int(np.max(warped_c)) + 1
-
-        # the shape of the warped image
-        output_quad_r, output_quad_c = polygon(warped_r[:4], warped_c[:4])
-
-        im0_warped = np.zeros((warped_height, warped_width, 4), dtype=np.float32)
-
-        im0_warped[output_quad_r, output_quad_c] = interp2(warped_r, warped_c, output_quad_r, output_quad_c, im0,
-                                                           im0_points)
-
-        return im0_warped, shift_r, shift_c
 
     def stitch(self, overwrite=False):
         """
         Warps together the leftmost image in self.images (self.images[0])
         and the second leftmost image in self.images (self.images[1]).
-        If either image is the "center" perspective (self.center), then the
-        other image's perspective warps to match it.
+
+        The new image will have the perspective of self.images[0] if and only if
+        self.center == 0 (e.g. it will have the perspective self.images[1] otherwise).
 
         Removes the old correspondence matrix and updates the next
         correspondence matrix with shifted points.
 
         """
         assert self.length() >= 2
-        im0_warped, shift_r, shift_c = self.warp(self.images[0], self.correspondences[0])
+        if self.center:
+            self.center = self.center - 1
+        else:
+            self.images[0], self.images[1] = self.images[1], self.images[0]
+            self.correspondences[0] = np.vstack((self.correspondences[0][3:, :], self.correspondences[0][:3, :]))
+
+        im0_warped, shift_r, shift_c = warp(self.images[0], self.correspondences[0])
         im1 = self.images[1]
 
         im0_height, im0_width, _ = im0_warped.shape
@@ -246,6 +313,17 @@ class Mosaic:
             self.correspondences[0][0, :] += shift_r
             self.correspondences[0][1, :] += shift_c
 
+    def select_correspondences(self, N, auto=True):
+        for i in range(self.length() - 1):
+            corr_i = select_correspondences(self.images[i], self.images[i + 1], N, auto)
+            self.correspondences.append(corr_i)
+
+    def length(self):
+        return len(self.images)
+
+    def __getitem__(self, index):
+        return self.images[index]
+
     def show(self):
         plt.imshow(self[0])
         plt.show()
@@ -253,81 +331,12 @@ class Mosaic:
     def save(self, file):
         plt.imsave(file, self[0])
 
-    def select_correspondences(self, N, auto=True):
-        plt.ion()
-        fig, axarr = plt.subplots(1, 2, figsize=(18, 6))
-
-        for i in range(self.length() - 1):
-            correspondences = np.ones((6, N))
-            axarr[0].imshow(self.images[i])
-            axarr[1].imshow(self.images[i + 1])
-
-            for j in range(N):
-                ### Select first point ###
-                x0, y0 = fig.ginput(1)[0]
-                x0, y0 = int(x0), int(y0)
-                correspondences[0, j], correspondences[1, j] = y0, x0
-                axarr[0].plot(x0, y0, '.r')
-                axarr[0].annotate(j + 1, (x0, y0), xytext=(x0 + 25, y0 + 25))
-
-                ### Select second point ###
-                x1, y1 = fig.ginput(1)[0]
-                x1, y1 = int(x1), int(y1)
-
-                if auto:
-                    ### Automatically "snap" x, y to an adjusted value ###
-                    region0 = lattice((y0, x0))
-                    grey_region0 = rgb2gray(rgba2rgb(self.images[i][region0[:, 0], region0[:, 1], :]))
-
-                    best_corr = -1
-                    best_x, best_y = x1, y1
-                    for x in range(x1 - 10, x1 + 11):
-                        for y in range(y1 - 10, y1 + 11):
-                            region1 = lattice((y, x))
-                            grey_region1 = rgb2gray(rgba2rgb(self.images[i + 1][region1[:, 0], region1[:, 1], :]))
-                            score = NCC(grey_region0.flatten(), grey_region1.flatten())
-                            # print(f"{(x, y)} \t score: {score}")
-                            if score > best_corr:
-                                best_x, best_y = x, y
-                                best_corr = score
-                    if score > 0.99:
-                        x1, y1 = best_x, best_y
-
-                correspondences[3, j], correspondences[4, j] = y1, x1
-                axarr[1].plot(x1, y1, '.r')
-                axarr[1].annotate(j + 1, (x1, y1), xytext=(x1 + 25, y1 + 25))
-            axarr[0].clear()
-            axarr[1].clear()
-
-            self.correspondences.append(correspondences)
-        plt.ioff()
-        plt.close()
-
-        return self.correspondences
-
-    def length(self):
-        return len(self.images)
-
-
-def skull():
-    ambassadors_skull = rgba2rgb(plt.imread("lib/ambassadors_skull.jpeg"))
-    blank = np.zeros((300, 300, 4))
-    rectified_skull = Mosaic([ambassadors_skull, blank])
-    rectified_skull.select_correspondences(N=4, auto=False)
-    r, _, _ = rectified_skull.warp()
-    plt.imshow(r)
-    plt.show()
-    plt.imsave("out/skull.jpeg", r)
 
 def pencil_box():
-    box = plt.imread("lib/pencil_box.jpeg")
-    blank = np.zeros((300, 300, 4))
-    plt.imshow(box)
-    plt.show()
-    rectified_pencil_box = Mosaic([box, blank])
+    box = normalize(plt.imread("lib/pencil_box.jpeg"))
 
     ### pre-defined correspondences
-    correspondences = np.array([
+    correspondence = np.array([
         [160, 73, 345, 195],
         [58, 628, 103, 812],
         [1, 1, 1, 1],
@@ -335,11 +344,26 @@ def pencil_box():
         [0, 0, 299, 299],
         [1, 1, 1, 1]
     ])
-    rectified_pencil_box.correspondences.append(correspondences)
-    r, _, _ = rectified_pencil_box.warp()
+    r, _, _ = warp(box, correspondence)
     plt.imshow(r)
-    plt.imsave("out/pencil_box.jpeg", r)
+    plt.show()
+    # plt.imsave("out/pencil_box.jpeg", r)
     # rectified_pencil_box.stitch()
+
+def skull():
+    ambassadors_skull = normalize(plt.imread("lib/ambassadors_skull.jpeg"))
+
+    blank = np.zeros((300, 300, 4))
+    corr = select_correspondences(ambassadors_skull, blank, N=4, auto=False)
+    plt.imshow(ambassadors_skull)
+    plt.show()
+    r, _, _ = warp(ambassadors_skull, corr)
+    plt.imshow(ambassadors_skull)
+    plt.show()
+    print(r.shape)
+    plt.imshow(r)
+    plt.show()
+    plt.imsave("out/skull3.jpeg", r)
 
 
 def walt_jr():
@@ -351,15 +375,16 @@ def walt_jr():
     m.show()
     m.save("out/walt_jr.jpeg")
 
+
 def varun():
     varun_left = plt.imread("lib/varun_left.jpeg")
     varun_right = plt.imread("lib/varun_right.jpeg")
     m = Mosaic([varun_left, varun_right])
-    m.select_correspondences(N=12)
+    m.center = 0
+    m.select_correspondences(N=4)
     m.stitch()
     m.show()
-    m.save("out/varun_stitched_distance_mask_blur2.jpeg")
-
+    m.save("out/varun_L.jpeg")
 
 def building():
     building_top = plt.imread("lib/building_top.jpeg")
@@ -372,7 +397,6 @@ def building():
     m.show()
     m.save("out/building.jpeg")
 
-
 def anthropology():
     anthro1 = plt.imread("lib/anthro1.jpeg")
     anthro2 = plt.imread("lib/anthro2.jpeg")
@@ -383,7 +407,7 @@ def anthropology():
     m.stitch()
     m.stitch()
     m.show()
-    m.save("out/anthropology.jpeg")
+    m.save("out/anthropology2.jpeg")
 
 def floating():
     floating_top = plt.imread("lib/floating_top.jpeg")
@@ -396,15 +420,15 @@ def floating():
 
 def part_a():
     ### rectification ###
-    pencil_box()
-    skull()
-    walt_jr()
+    # pencil_box()
+    # skull()
+    # walt_jr()
 
     ### mosaics ###
-    varun()
-    building()
+    # varun()
+    # building()
     anthropology()
-    floating()
+    # floating()
 
 
 def main():
