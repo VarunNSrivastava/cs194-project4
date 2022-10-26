@@ -45,7 +45,7 @@
 							<h2>Defining Correspondences</h2>
 							<p> Correspondences were manually selected. In order to help this process, I built
 								a fine-tuning tool that would automatically "snap" a correspondence to a nearby
-								pixel with a higher NCC. This resulted in fast and accurate correspondence-selection.
+								pixel with a higher NCC. This resulted in fast and accurate correspondence-selection.</p>
 						</div>
 						<div class="image">
 							<img src="out/correspondences.jpeg" alt="" />
@@ -393,6 +393,347 @@
 						</div>
 						<div class="image">
 							<img src="out/anthropology2.jpeg" alt="" />
+						</div>
+					</section>
+
+				<!-- Part B: Automosaics -->
+					<section class="spotlight style2 orient-center content-align-center image-position-center onscroll-image-fade-in color6" id="first">
+						<div class="content">
+							<h2>Part B: Automosaics</h2>
+						</div>
+						<div class="image">
+							<img src="out/harris_corners.jpeg" alt="" />
+						</div>
+
+					</section>
+
+				<!-- Feature Selection -->
+					<section class="wrapper style1 color1 invert">
+						<div class="inner">
+							<h2>Feature Selection</h2>
+							<p>We use Harris Corners and the ANMS refinement technique to identify interest points automatically.</p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style2 center large">
+								<article>
+									<a href="lib/varun_left.jpeg" class="image">
+										<img src="lib/varun_left.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Original image </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/harris_corners.jpeg" class="image">
+										<img src="out/harris_corners.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Harris Corners —— way too many features! </h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/ANMS_corners.jpeg" class="image">
+										<img src="out/ANMS_corners.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>ANMS Corners (much fewer)</h3>
+									</div>
+								</article>
+
+							</div>
+
+
+						<br><br>
+
+					</section>
+
+				<!-- Feature Descriptions -->
+					<section class="wrapper style1 color6">
+						<div class="inner">
+							<h2>Feature Descriptions</h2>
+							<p>Next we extract feature vectors around each interest point, which consist of a rescaled, blurred
+								40 x 40 vector around the point, resulting in a 64-dimensional descriptor.
+								Below are some example description vectors.</p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style1 center large">
+								<article>
+									<a href="out/feature1.jpeg" class="image">
+										<img src="out/feature1.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="out/feature2.jpeg" class="image">
+										<img src="out/feature2.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="out/feature2.jpeg" class="image">
+										<img src="out/feature2.jpeg" alt="" />
+									</a>
+								</article>
+
+							</div>
+						<br><br>
+					</section>
+
+
+				<!-- Matching Features -->
+				<section class="spotlight style5 orient-center content-align-center image-position-center onscroll-image-fade-in invert" id="first">
+						<div class="content">
+							<h2>Matching Features</h2>
+							<p> Now we have to match features to derive correspondences. We do this by:
+							<ol>
+							  <li>Finding Nearest Neighbors between interest points</li>
+							  <li>Using Lowe Thresholding to select for the "best" neighbors</li>
+							  <li>Using 4-RANSAC to refine our selection</li>
+							</ol>
+							In particular, the 4-RANSAC technique was the same as that described in class; 4-point
+							homographies were randomly sampled and a sufficiently good homography's inliers
+							were used as the final set of correspondences. In the background is an example
+							of these automatically generated correspondences. They look pretty accurate!.
+							</p>
+						</div>
+						<div class="image">
+							<img src="out/auto_correspondences.jpeg" alt="" />
+						</div>
+
+					</section>
+
+
+				<!-- Results -->
+					<section class="wrapper style1 color1 invert">
+						<div class="inner">
+							<h2>Results</h2>
+							<p>Now we can use these correspondences to compute our mosaics.
+								Here are comparisons of some of our "by-hand" panoramics and corresponding automosaics: </p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style1 center medium">
+								<article>
+									<a href="out/building.jpeg" class="image">
+										<img src="out/building.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Hand-selected correspondences</h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/auto_building.jpeg" class="image">
+										<img src="out/auto_building.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Automaticly selected correspondences</h3>
+									</div>
+								</article>
+
+								<article>
+									<a href="out/varun_stitched_distance_mask_blur.jpeg" class="image">
+										<img src="out/varun_stitched_distance_mask_blur.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Hand-selected correspondences</h3>
+									</div>
+
+								</article>
+								<article>
+									<a href="out/auto_varun.jpeg" class="image">
+										<img src="out/auto_varun.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Automaticly selected correspondences</h3>
+									</div>
+								</article>
+
+								<article>
+									<a href="out/anthropology2.jpeg" class="image">
+										<img src="out/anthropology2.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Hand-selected correspondences</h3>
+									</div>
+								</article>
+								<article>
+									<a href="out/auto_anthropology.jpeg" class="image">
+										<img src="out/auto_anthropology.jpeg" alt="" />
+									</a>
+									<div class="caption">
+										<h3>Automaticly selected correspondences</h3>
+									</div>
+								</article>
+
+							</div>
+						<br><br>
+					</section>
+
+
+				<!-- Bells and Whistles -->
+					<section class="wrapper style1 color6">
+						<div class="inner">
+							<h2>Bells and Whistles: Panorama Recognition</h2>
+							<p>Given a set of unordered images, we attempt to recognize which ones form a panorama,
+								and then proceed to stitch those images together into a panorama. The technique
+								I used for this was naive: if two images have many correspondence points,
+								they can be stitched together. Putting together all the images that can be stitched
+								together (with some consideration to order) will form a panorama.
+								<br>
+								I took 20 random-ish images (pictured below with similar images placed next to each other),
+								a few of which depicted the same object from
+								multiple perspectives, and algorithmically extracted the mosaics that could be turned
+								into panorammics. </p>
+						</div>
+
+						<!-- Gallery -->
+							<div class="gallery style2 center medium">
+								<article>
+									<a href="lib/unordered/6240.jpeg" class="image">
+										<img src="lib/unordered/6240.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/6264.jpeg" class="image">
+										<img src="lib/unordered/6264.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/6265.jpeg" class="image">
+										<img src="lib/unordered/6265.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/9669.jpeg" class="image">
+										<img src="lib/unordered/9669.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/9670.jpeg" class="image">
+										<img src="lib/unordered/9670.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/9671.jpeg" class="image">
+										<img src="lib/unordered/9671.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/9672.jpeg" class="image">
+										<img src="lib/unordered/9672.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/9675.jpeg" class="image">
+										<img src="lib/unordered/9675.jpeg" alt="" />
+									</a>
+								</article>
+
+								<article>
+									<a href="lib/unordered/cloth.jpeg" class="image">
+										<img src="lib/unordered/cloth.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/9679.jpeg" class="image">
+										<img src="lib/unordered/9679.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/9680.jpeg" class="image">
+										<img src="lib/unordered/9680.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/9681.jpeg" class="image">
+										<img src="lib/unordered/9681.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/63947861.jpeg" class="image">
+										<img src="lib/unordered/63947861.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/93214254.jpeg" class="image">
+										<img src="lib/unordered/93214254.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/buddha.jpeg" class="image">
+										<img src="lib/unordered/buddha.jpeg" alt="" />
+									</a>
+								</article>
+
+								<article>
+									<a href="lib/unordered/chair.jpeg" class="image">
+										<img src="lib/unordered/chair.jpeg" alt="" />
+									</a>
+								</article>
+
+								<article>
+									<a href="lib/unordered/guitar.jpeg" class="image">
+										<img src="lib/unordered/guitar.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="lib/unordered/jacob_Collier_1180307.jpeg" class="image">
+										<img src="lib/unordered/jacob_Collier_1180307.jpeg" alt="" />
+									</a>
+								</article>
+
+								<article>
+									<a href="lib/unordered/Monkey_183990239.jpeg" class="image">
+										<img src="lib/unordered/Monkey_183990239.jpeg" alt="" />
+									</a>
+								</article>
+
+							</div>
+						<p>This was successful and yielded the following panoramas: </p>
+
+						<!-- Gallery -->
+							<div class="gallery style1 center medium">
+								<article>
+									<a href="out/unordered/mosaic4.jpeg" class="image">
+										<img src="out/unordered/mosaic4.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="out/unordered/mosaic8.jpeg" class="image">
+										<img src="out/unordered/mosaic8.jpeg" alt="" />
+									</a>
+								</article>
+								<article>
+									<a href="out/unordered/mosaic16.jpeg" class="image">
+										<img src="out/unordered/mosaic16.jpeg" alt="" />
+									</a>
+								</article>
+
+							</div>
+						<br>
+						<p>The last panoramic (of my parents' wedding) was not actually of the same
+							image, so it makes sense that the resulting panoramic looks incorrect.
+							That said, it makes sense that they were detected as potential
+							candidates for a panoramic and the algorithm attempted to match them.</p>
+
+						<br><br>
+
+					</section>
+
+				<!-- Conclusion -->
+					<section class="spotlight style1 orient-left content-align-left image-position-center onscroll-image-fade-in invert color1" id="first">
+						<div class="content">
+							<h2>Conclusion</h2>
+							<p>One of the coolest techniques I learned from this project was Lowe Thresholding.
+								I am surprised at how effective it is as a metric for quality selection, as it
+								seems to be empirically very reliable. I am also surprised that a naive
+								nearest neighbors worked, without implementing rotational invariance,
+								on my feature vectors. I think that this speaks to the power
+								of simple metrics being sufficiently effective much of the time.</p>
+
+						</div>
+						<div class="image">
+							<img src="lib/unordered/buddha.jpeg" alt="" />
 						</div>
 					</section>
 

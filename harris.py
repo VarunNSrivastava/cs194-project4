@@ -2,7 +2,7 @@ import numpy as np
 from skimage.feature import corner_harris, peak_local_max
 
 
-def get_harris_corners(im, edge_discard=20):
+def get_harris_corners(im, edge_discard=20, r=1):
     """
     This function takes a b&w image and an optional amount to discard
     on the edge (default is 5 pixels), and finds all harris corners
@@ -18,7 +18,7 @@ def get_harris_corners(im, edge_discard=20):
 
     # find harris corners
     h = corner_harris(im, method='eps', sigma=1)
-    coords = peak_local_max(h, min_distance=1, indices=True)
+    coords = peak_local_max(h, min_distance=r)
 
     # discard points on edge
     edge = edge_discard  # pixels
@@ -47,7 +47,7 @@ def dist2(x, c):
 
     ndata, dimx = x.shape
     ncenters, dimc = c.shape
-    assert (dimx == dimc, 'Data dimension does not match dimension of centers')
+    assert dimx == dimc, 'Data dimension does not match dimension of centers'
 
     return (np.ones((ncenters, 1)) * np.sum((x ** 2).T, axis=0)).T + \
            np.ones((ndata, 1)) * np.sum((c ** 2).T, axis=0) - \
